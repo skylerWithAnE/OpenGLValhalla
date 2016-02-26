@@ -1,0 +1,48 @@
+Twin-Stick Shooter with a perspective camera pitched to resemble an isometric view
+	perhaps an orthographic camera, might make the most sense.
+	Game lasts as long as the player survives in a single survival mode
+		OR
+	Game is a series of randomly generated environments perhaps with a win-condition after N-levels.
+	
+
+Graphics Goals:
+	Stencil Shadows
+		Stencil Shadows will be acceptable since the camera cannot enter the volume of the shadows
+		therefore I won't need to use Carmack's reverse.
+	Blur 
+		when the player picks up powerups or takes damage
+	Deferred Rendering 
+		so that the level can be nicely detailed with
+		emissive materials and normal/bump mapped textures.
+	Billboard
+		for sprites--item pick ups, scenery, bloody decals.
+	Sky Box
+		I don't know if this was covered in Computer Graphics I, but I will need
+		a good looking horizon.
+	Collision Detection
+		If I can do this for credit toward a milestone, I will. But I think I'd rather
+		integrate Bullet(see below).
+
+Stretch Goals:
+	GPU Particles
+		This would make the game much more visually appealing. If I don't have these then
+		projectiles might be very costly if they are a bunch of meshes flying all over the place.
+	Skeletal Animations
+		I would like to have at least the main player character animated with skeletal animations
+		on an extremely simple skeleton.
+	Mesh deformation targets
+		Some basic enemies could potentially be animated by morph deformation targets.
+	Bullet Physics integration
+		Instead of basic collision detection, I would like to integrate bullet physics so the
+		game can have some cool dynamic physics.
+	Diamond-Square Driven Environment Mapping
+		It's a toss-up right now if this will be a static room or a random environment. If I'm able,
+		I would like to use the Diamond-Square algorithm to make some random terrains.
+
+CURRENTLY: 
+	*A hack-job "forked" from "geo2" example provided on the notes.  I have modified the vertex shader to allow me 
+		to pass in a transformation mat4 to translate objects on the screen. I also removed the cloning
+		functionality out of the geoshader.
+	*Player's velocity and shots are calculated poorly, resulting in the camera becoming uncentered
+	*More top down than isometric. I need a horizon line to figure out how to place the camera.
+	 
