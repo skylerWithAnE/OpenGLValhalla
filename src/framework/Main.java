@@ -60,13 +60,15 @@ public class Main{
         UnitSquare usq;
         Framebuffer fbo1;
         Framebuffer fbo2;
+        Framebuffer depthMapFBO;
         Texture2D dummytex = new SolidTexture(GL_UNSIGNED_BYTE,0,0,0,0);
         column = new Mesh("assets/usq.obj.mesh");
         usq = new UnitSquare();
 
         fbo1 = new Framebuffer(512,512);
         fbo2 = new Framebuffer(512,512);
-
+        depthMapFBO = new Framebuffer(1024,1024);
+        
         prog = new Program("vs.txt","gs.txt","fs.txt");
        
         cam = new Camera();
@@ -98,10 +100,12 @@ public class Main{
         {
             row = i % 8==0 ? row+1 : row;
             col = i % 8==0 ? 0     : col+1;
-            System.out.println("x: " + String.valueOf((row-1)*2.0f) + " y: " + String.valueOf(2.0f*(col)));
+            //System.out.println("x: " + String.valueOf((row-1)*2.0f) + " y: " + String.valueOf(2.0f*(col)));
             room[i] = new Mesh("assets/usq.obj.mesh");
             roomTransforms[i] = translation(new vec3((row-1)*2.0f, col*2.0f, 0.f));
         }
+        
+        float[] frameRate = new float[2];
         while(true){
             while(true){
                 int rv = SDL_PollEvent(ev);
@@ -121,7 +125,15 @@ public class Main{
 
             float now = (float)(System.nanoTime()*1E-9);
             float elapsed = now-prev;
-            if(!canShoot)
+            frameRate[0] += elapsed;
+            frameRate[1]++;
+            if (frameRate[0] >= 1f)
+            {
+                frameRate[0] = 0;
+                System.out.println(frameRate[1]);
+                frameRate[1] = 0;
+            }
+            
             {
                 shootDelay += elapsed;
                 if(shootDelay > fireRate)
@@ -213,6 +225,26 @@ public class Main{
             }
             pc.Update(elapsed, prog);
             cam.draw(prog);
+            
+            
+            /*
+            int[] depthMap = new int[1];
+            glGenTextures(1, depthMap);
+            glBindTexture(GL_TEXTURE_2D, depthMap[0]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 
+                            0, GL_DEPTH_COMPONENT, GL_FLOAT, null);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+            depthMapFBO.bind();
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap[0], 0);
+            glDrawBuffer(GL_NONE);
+            glReadBuffer(GL_NONE);
+            depthMapFBO.unbind();
+            */
+            
             
 
             
