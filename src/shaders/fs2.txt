@@ -1,0 +1,20 @@
+#version 150
+precision highp float;
+
+uniform sampler2D tex1;
+//uniform sampler2D tex2;
+//uniform float knob;
+
+in vec4 v_texcoord;
+
+out vec4 color;
+
+void main(){
+    vec2 tc = v_texcoord.st;
+    vec4 c1 = texture2D(tex1,tc);
+    //vec4 c2 = texture2D(tex2,tc);
+    color = vec4(c1.rgb, 1.0);
+    //gl_FragColor=mix(c1,c2,knob);
+    //gl_FragColor.rgb=c1.rgb;
+    //gl_FragColor.a=1.0;
+}

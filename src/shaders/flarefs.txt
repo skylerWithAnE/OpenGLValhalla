@@ -1,0 +1,25 @@
+#version 150
+
+precision mediump float;
+uniform sampler2D basetexture;
+uniform sampler2D avgillumtexture;
+uniform float alphascale;
+in vec2 v_texcoord;
+out vec4 color;
+
+void main()
+{
+    vec4 c= texture2D( basetexture, v_texcoord );  
+    if( c.a < 0.01 )
+        discard; 
+        
+    //it's a 1x1 texture, so the coordinates don't matter
+    float a = texture2D(avgillumtexture,vec2(0.5,0.5)).r;
+    
+    //a=1 -> full flare effect
+    //a=0 -> no flare effect
+    color = vec4(c.rgb, a*c.a*alphascale);
+    //gl_FragColor.rgb = c.rgb;
+    //gl_FragColor.a = a*c.a*alphascale;
+        
+}

@@ -1,0 +1,12 @@
+#version 150
+
+in vec4 position;
+in vec4 texcoord;
+
+out vec4 v_texcoord;
+//out vec3 v_pos;
+
+void main(){
+    v_texcoord = texcoord;
+    gl_Position = position;
+}

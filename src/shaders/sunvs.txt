@@ -1,0 +1,12 @@
+#version 150
+
+attribute vec4 position;
+
+uniform mat4 worldMatrix;
+uniform mat4 viewProjMatrix;
+uniform mat4 transform;
+
+void main(){
+    vec4 p = position * worldMatrix;
+    gl_Position = p * viewProjMatrix;
+}

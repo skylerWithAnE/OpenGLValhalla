@@ -25,7 +25,7 @@ public class Camera{
         compute_proj_matrix();
         compute_view_matrix();
     }
-
+    
     public void compute_proj_matrix(){
         projMatrix = new mat4( 
             1/tan(toRadians(fov_h)),0,0,0,

@@ -1,0 +1,8 @@
+#version 150
+
+precision mediump float;
+uniform sampler2D tex;
+in vec2 v_texcoord;
+void main(){
+    gl_FragColor = 1.0/255.0 * vec4(texture2D(tex,v_texcoord.st).rgb,1.0);
+}

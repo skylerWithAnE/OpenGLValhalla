@@ -1,0 +1,37 @@
+#version 150
+
+uniform vec3 lightPos;
+uniform vec3 lightColor;
+uniform vec3 eyePos;
+uniform sampler2D diffuse_texture;
+
+in vec2 g_texcoord;
+in vec3 g_normal;
+in vec3 g_pw;
+
+out vec4 color;
+
+void main(){
+    vec4 tc = texture(diffuse_texture,g_texcoord);
+    vec3 N = normalize(g_normal);
+    vec3 V = normalize(eyePos - g_pw);
+    vec3 L = (lightPos - g_pw);
+    vec3 diffuse;
+    vec3 specular;
+    float Ldist = length(L);
+    L = 1.0/Ldist * L;
+    float dp = dot(L,N);
+    dp = clamp(dp,0.0,1.0);
+    diffuse = dp*lightColor.rgb;
+    vec3 R = reflect(-L,N);
+    float sp = dot(V,R);
+    sp *= sign(dp);
+    sp = pow(sp,32.0); 
+    sp = clamp(sp,0.0,1.0);
+    specular = sp * lightColor.rgb;
+    //color = vec4( dp*tc.rgb + vec3(sp), tc.a );
+    color = vec4(diffuse.rgb * tc.rgb, tc.a);
+    color.rgb += specular.rgb;
+    color.a = tc.a;
+}
+
