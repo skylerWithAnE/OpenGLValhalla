@@ -34,16 +34,16 @@ public class PointGrid {
     
     public void setup()
     {
-        ArrayList pts = new ArrayList();
+        ArrayList<Float> pts = new ArrayList<>();
         this.np = this.nx * this.ny;
         for(int i = 0; i < this.nx; ++i)
         {
             //float x = -1.0f + 2.0f * i / (this.nx-1f);
-            int s  = i/(this.nx-1);
+            float s  = i/(this.nx-1);
             for(int j = 0; j < this.ny; ++j)
             {
                 //float y = -1.0f + 2.0f * j / (this.ny-1);
-                int t = j/(this.ny-1);
+                float t = j/(this.ny-1);
                 pts.add(s);
                 pts.add(t);
             }
@@ -52,6 +52,15 @@ public class PointGrid {
         glGenBuffers(1,tmp);
         this.vbuff = tmp[0];
         this.vdata = new byte[pts.size()]; //need to figure out how to assign points into vdata.
+        /*
+        ByteBuffer bb = ByteBuffer.allocate(pts.size() * 3 * 4);
+        bb.order(ByteOrder.nativeOrder());
+        FloatBuffer fb = bb.asFloatBuffer();
+        
+        //convert pts from ArrayList into a float array.
+        
+        fb.put(fa);
+        */
         glBindBuffer( GL_ARRAY_BUFFER, this.vbuff );
         glBufferData( GL_ARRAY_BUFFER, this.vdata.length , this.vdata, GL_STATIC_DRAW );
         
