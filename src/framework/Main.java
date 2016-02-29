@@ -56,7 +56,7 @@ public class Main{
 
         Set<Integer> keys = new TreeSet<>();
         Camera cam;
-        Program prog, progBlur, prog3;
+        Program prog, progBlur, prog3, progGBlur, progUSQ, progSun, progPG, progFlare;
         float prev;
         
         //blur variables
@@ -80,9 +80,20 @@ public class Main{
         fbo3 = new Framebuffer(512,512);
         depthMapFBO = new Framebuffer(1024,1024);
         
-        prog = new Program("vs.txt","gs.txt","fs.txt");
-        progBlur = new Program("vsBlur.txt","fsBlur.txt");
-        prog3 = new Program("vsBlur.txt","fs2.txt");
+        //Basic Programs
+        prog = new Program("src/shaders/vs.txt","src/shaders/gs.txt","src/shaders/fs.txt");
+        
+        //Radial Blur Programs
+        progBlur = new Program("src/shaders/vsBlur.txt","src/shaders/fsBlur.txt");
+        prog3 = new Program("src/shaders/vsBlur.txt","src/shaders/fs2.txt");
+        
+        //HDR/Glow Lens Flare Programs
+        progGBlur = new Program("src/shaders/gblur11vs.txt","src/shaders/gblur11fs.txt");
+        progUSQ = new Program("src/shaders/usqvs.txt","src/shaders/usqfs.txt");
+        progSun = new Program("src/shaders/sunvs.txt","src/shaders/sunfs.txt");
+        progPG = new Program("src/shaders/pgvs.txt","src/shaders/pgfs.txt");
+        progFlare = new Program("src/shaders/flarevs.txt","src/shaders/flarefs.txt");
+        
        
         cam = new Camera();
         cam.lookAt( new vec3(0,0,5), new vec3(0,0,0), new vec3(0,1,0) );

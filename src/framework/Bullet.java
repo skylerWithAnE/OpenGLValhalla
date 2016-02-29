@@ -32,7 +32,6 @@ public class Bullet {
     {
         
         mat4 trans = this.transform.mul(math3d.translation(this.velocity.mul((speed*dT))));
-        //trans = trans.mul(math3d.axisRotation(1.f,0.f,0.f, 6f*dT));
         this.transform = trans;
         prog.setUniform("transform", this.transform);
         this.bulletShape.draw(prog);
