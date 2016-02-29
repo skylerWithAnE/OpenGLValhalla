@@ -13,6 +13,9 @@ import static framework.math3d.math3d.sub;
 import static framework.math3d.math3d.translation;
 import framework.math3d.vec2;
 import framework.math3d.vec4;
+import static framework.math3d.math3d.mul;
+import static framework.math3d.math3d.sub;
+import static framework.math3d.math3d.translation;
 
 
 public class Main{
@@ -54,12 +57,20 @@ public class Main{
 
         Set<Integer> keys = new TreeSet<>();
         Camera cam;
-        Program prog, prog2;
+        Program prog, progBlur, prog3;
         float prev;
+        
+        //blur variables
+        UnitSquare usqBlur = new UnitSquare();
+        float blur_s = -1.0f;
+        float blur_t = 0.5f;
+        float blur_dir = 0.0f;
+        
         Mesh column;
         UnitSquare usq;
         Framebuffer fbo1;
         Framebuffer fbo2;
+        Framebuffer fbo3;
         Framebuffer depthMapFBO;
         Texture2D dummytex = new SolidTexture(GL_UNSIGNED_BYTE,0,0,0,0);
         column = new Mesh("assets/usq.obj.mesh");
@@ -67,9 +78,12 @@ public class Main{
 
         fbo1 = new Framebuffer(512,512);
         fbo2 = new Framebuffer(512,512);
+        fbo3 = new Framebuffer(512,512);
         depthMapFBO = new Framebuffer(1024,1024);
         
         prog = new Program("vs.txt","gs.txt","fs.txt");
+        progBlur = new Program("vsBlur.txt","fsBlur.txt");
+        prog3 = new Program("vsBlur.txt","fs2.txt");
        
         cam = new Camera();
         cam.lookAt( new vec3(0,0,5), new vec3(0,0,0), new vec3(0,1,0) );
@@ -81,7 +95,7 @@ public class Main{
 
         SDL_Event ev=new SDL_Event();
         boolean canShoot = true;
-        boolean drawColumn = false;
+        boolean blurDraw = false;
         float fireRate = 0.2f;
         float shootDelay = 0.0f;
         LinkedList<Bullet> activeBullets = new LinkedList<Bullet>();
@@ -90,7 +104,6 @@ public class Main{
         for(int l = 0; l < 16; l++)
             matTmp[l] = 1.f;
         mat4 roomTransform = translation(new vec3());
-        System.out.println(roomTransform.toString());
         int floorsize = 256;
         Mesh[] room = new Mesh[floorsize];
         mat4[] roomTransforms = new mat4[floorsize];
@@ -100,12 +113,11 @@ public class Main{
         {
             row = i % 8==0 ? row+1 : row;
             col = i % 8==0 ? 0     : col+1;
-            //System.out.println("x: " + String.valueOf((row-1)*2.0f) + " y: " + String.valueOf(2.0f*(col)));
             room[i] = new Mesh("assets/usq.obj.mesh");
             roomTransforms[i] = translation(new vec3((row-1)*2.0f, col*2.0f, 0.f));
         }
         
-        float[] frameRate = new float[2];
+        //float[] frameRate = new float[2];
         while(true){
             while(true){
                 int rv = SDL_PollEvent(ev);
@@ -125,14 +137,14 @@ public class Main{
 
             float now = (float)(System.nanoTime()*1E-9);
             float elapsed = now-prev;
-            frameRate[0] += elapsed;
-            frameRate[1]++;
-            if (frameRate[0] >= 1f)
-            {
-                frameRate[0] = 0;
-                System.out.println(frameRate[1]);
-                frameRate[1] = 0;
-            }
+//            frameRate[0] += elapsed;
+//            frameRate[1]++;
+//            if (frameRate[0] >= 1f)
+//            {
+//                frameRate[0] = 0;
+//                System.out.println(frameRate[1]);
+//                frameRate[1] = 0;
+//            }
             
             {
                 shootDelay += elapsed;
@@ -199,34 +211,114 @@ public class Main{
             }
             if(keys.contains(SDLK_SPACE))
             {
-                drawColumn = !drawColumn;
+                if(!blurDraw)
+                {
+                    blurDraw = true;
+                    blur_dir = 1f;
+                }
+                
+                if(blur_s > 0.9f)
+                    blur_dir = -1f;
+                if(blur_s < 0f)
+                    blur_dir = 1f;
+                System.out.println(blur_s);
+                blur_s += elapsed * blur_dir;
+                //blur_t = 0.5f;
+                //blur_t = (float)Math.sin(blur_s) / 4f;
             }
-            
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            else
+            {
+                blur_s = 0f;
+                //blur_t = 0f;
+                blurDraw = false;
+            }
+ 
             trans = trans.mul(math3d.axisRotation(1.0f, 0.0f, 0.0f, 0.0f));
             
-            //the fbo stuff is for later...
-            //fbo1.bind();
-            prog.use();
-            prog.setUniform("lightPos",new vec3(50,50,50) );
-            prog.setUniform("transform", roomTransform);
-            
-            prog.setUniform("transform", trans);
-            prog.setUniform("worldMatrix",mat4.identity());
-            //column.draw(prog);
-            for(int j = 0; j < floorsize; j++)
+            if(blurDraw)
             {
-                prog.setUniform("transform", roomTransforms[j]);
-                room[j].draw(prog);
+                //need to break this down into functions.
+
+                fbo1.bind(); //bind this fbo, draw unblurred
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                prog.use();
+                prog.setUniform("lightPos",new vec3(50,50,50) );
+                prog.setUniform("lightColor", new vec3(1,0,0));
+                //prog.setUniform("transform", roomTransform); //this must be pointless.
+
+                prog.setUniform("transform", trans);
+                prog.setUniform("worldMatrix",mat4.identity());
+                //column.draw(prog);
+                cam.draw(prog);
+                for(int j = 0; j < floorsize; j++)
+                {
+                    prog.setUniform("transform", roomTransforms[j]);
+                    room[j].draw(prog);
+                }
+                for(int i = 0; i < activeBullets.size(); i++)
+                {
+                    activeBullets.get(i).update(elapsed, prog);
+                }
+                pc.Update(elapsed, prog);
+                fbo1.unbind();
+
+
+
+                //draw a blurred copy of the scene to fbo3
+                progBlur.use();
+                progBlur.setUniform("blur_center",new vec2(blur_s,blur_t));
+                progBlur.setUniform("do_normalize", 1f);
+                progBlur.setUniform("stepsize",0.01f);
+                progBlur.setUniform("numsteps",6.0f);
+                fbo3.bind();
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                progBlur.setUniform("basetexture",fbo1.texture);
+                usqBlur.draw(progBlur);
+                fbo3.unbind();
+
+                //not using fbo2 because not "experimental hacks"?
+
+                //finally, draw to screen
+                prog3.use();
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                prog3.setUniform("tex1",fbo3.texture);
+                prog3.setUniform("knob", 0.0f);
+                usqBlur.draw(prog3);
+                prog3.setUniform("tex1",dummytex); //why?
             }
-            for(int i = 0; i < activeBullets.size(); i++)
+            
+            else
             {
-                activeBullets.get(i).update(elapsed, prog);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                prog.use();
+                prog.setUniform("lightPos",new vec3(50,50,50) );
+                prog.setUniform("lightColor", new vec3(1,1,1));
+                //prog.setUniform("transform", roomTransform); //this must be pointless.
+
+                prog.setUniform("transform", trans);
+                prog.setUniform("worldMatrix",mat4.identity());
+                //column.draw(prog);
+                for(int j = 0; j < floorsize; j++)
+                {
+                    prog.setUniform("transform", roomTransforms[j]);
+                    room[j].draw(prog);
+                }
+                for(int i = 0; i < activeBullets.size(); i++)
+                {
+                    activeBullets.get(i).update(elapsed, prog);
+                }
+                pc.Update(elapsed, prog);
+                cam.draw(prog);
             }
-            pc.Update(elapsed, prog);
-            cam.draw(prog);
             
             
+            
+            
+            
+            
+            
+            
+            //shadowmapping stuff (kills framerate, doesn't work--doing something wrong here)
             /*
             int[] depthMap = new int[1];
             glGenTextures(1, depthMap);
@@ -264,4 +356,10 @@ public class Main{
 
         }//endwhile
     }//end main
+    
+    void BlurDraw()
+    {
+           
+        
+    }
 }
