@@ -20,7 +20,6 @@ import static framework.math3d.math3d.translation;
 
 public class Main{
     
-    
     public static void main(String[] args){
         
         SDL_Init(SDL_INIT_VIDEO);
@@ -37,7 +36,7 @@ public class Main{
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
         glDebugMessageCallback(
                 (int source, int type, int id, int severity, String message, Object obj ) -> {
-                    //System.out.println("GL message: "+message);
+                    System.out.println("GL message: "+message);
                     //if( severity == GL_DEBUG_SEVERITY_HIGH )
                     //    System.exit(1);
                 },
@@ -181,10 +180,7 @@ public class Main{
                 cam.walk(1.5f*elapsed);
             if( keys.contains(SDLK_k))
                 cam.walk(-1.5f*elapsed);
-            //if( keys.contains(SDLK_r))
-                //cam.tilt(0.4f*elapsed);
-            //if( keys.contains(SDLK_t))
-                //cam.tilt(-0.4f*elapsed);
+            
             if(canShoot)
             {
                 if( keys.contains(SDLK_UP))
@@ -221,10 +217,7 @@ public class Main{
                     blur_dir = -1f;
                 if(blur_s < 0f)
                     blur_dir = 1f;
-                System.out.println(blur_s);
                 blur_s += elapsed * blur_dir;
-                //blur_t = 0.5f;
-                //blur_t = (float)Math.sin(blur_s) / 4f;
             }
             else
             {
@@ -244,11 +237,8 @@ public class Main{
                 prog.use();
                 prog.setUniform("lightPos",new vec3(50,50,50) );
                 prog.setUniform("lightColor", new vec3(1,0,0));
-                //prog.setUniform("transform", roomTransform); //this must be pointless.
-
                 prog.setUniform("transform", trans);
                 prog.setUniform("worldMatrix",mat4.identity());
-                //column.draw(prog);
                 cam.draw(prog);
                 for(int j = 0; j < floorsize; j++)
                 {
@@ -276,7 +266,7 @@ public class Main{
                 usqBlur.draw(progBlur);
                 fbo3.unbind();
 
-                //not using fbo2 because not "experimental hacks"?
+                //not using fbo2 because not "experimental hacks"
 
                 //finally, draw to screen
                 prog3.use();
@@ -293,11 +283,9 @@ public class Main{
                 prog.use();
                 prog.setUniform("lightPos",new vec3(50,50,50) );
                 prog.setUniform("lightColor", new vec3(1,1,1));
-                //prog.setUniform("transform", roomTransform); //this must be pointless.
-
                 prog.setUniform("transform", trans);
                 prog.setUniform("worldMatrix",mat4.identity());
-                //column.draw(prog);
+                
                 for(int j = 0; j < floorsize; j++)
                 {
                     prog.setUniform("transform", roomTransforms[j]);
@@ -357,9 +345,4 @@ public class Main{
         }//endwhile
     }//end main
     
-    void BlurDraw()
-    {
-           
-        
-    }
 }
