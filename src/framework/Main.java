@@ -20,7 +20,7 @@ import static framework.math3d.math3d.translation;
 
 public class Main{
     
-    static int floorsize = 256;
+    static int floorsize = 1;
     static LinkedList<Bullet> activeBullets = new LinkedList<Bullet>();
     static Mesh[] room;
     static Mesh sun;
@@ -104,7 +104,12 @@ public class Main{
         progFlare = new Program("src/shaders/flarevs.txt","src/shaders/flarefs.txt");
         
         //Flare sprites
-        //Texture2D flareTex1 = new Texture2D("assets/flare1.png"); //well, how the hell do I make a texture?
+        FlareSprite[] flareSprites = new FlareSprite[3];
+        flareSprites[0] = new FlareSprite("assets/flare1.png", new vec4(-0.6f, 0.25f, 1.1f, 1.7f), new vec4(0.1f, 0.05f, 0.15f, 0.3f));
+        flareSprites[1] = new FlareSprite("assets/flare2.png", new vec3(-0.1f, 0.3f, 0.5f), new vec3(0.14f, 0.2f, 0.1f));
+        flareSprites[2] = new FlareSprite("assets/flare3.png", new vec4(-0.4f, 0.4f, 0.7f, 1.2f), new vec4(0.06f, 0.04f, 0.08f, 0.16f));
+        ImageTexture glowTex = new ImageTexture("assets/glow.png");
+                
         PointGrid pgrid = new PointGrid(16,16);
         
         //Sun Camera (for HDR/Glow, Lensflare)
@@ -129,7 +134,7 @@ public class Main{
         for(int l = 0; l < 16; l++)
             matTmp[l] = 1.f;
         //mat4 roomTransform = translation(new vec3());
-        int floorsize = 256;
+        //int floorsize = 256;
         room = new Mesh[floorsize];
         
         int row = 0;
@@ -138,11 +143,11 @@ public class Main{
         {
             row = i % 8==0 ? row+1 : row;
             col = i % 8==0 ? 0     : col+1;
-            room[i] = new Mesh("assets/usq.obj.mesh");
-            roomTransforms[i] = translation(new vec3((row-1)*2.0f, col*2.0f, 0.f));
+            room[i] = new Mesh("assets/ground.obj.mesh");
+            roomTransforms[i] = translation(new vec3((row-1)*25.0f, col*25.0f, 0.f));
         }
         
-        sun = new Mesh("assets/torus.obj.mesh");
+        sun = new Mesh("assets/bullet.obj.mesh");
         
         //float[] frameRate = new float[2];
         while(true){
@@ -262,6 +267,8 @@ public class Main{
 
                 fbo1.bind(); //bind this fbo, draw unblurred
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                drawScene(prog, cam, elapsed);
+                /*
                 prog.use();
                 prog.setUniform("lightPos",new vec3(50,50,50) );
                 prog.setUniform("lightColor", new vec3(1,0,0));
@@ -278,6 +285,7 @@ public class Main{
                     activeBullets.get(i).update(elapsed, prog);
                 }
                 pc.Update(elapsed, prog);
+                */
                 fbo1.unbind();
 
 
@@ -307,6 +315,8 @@ public class Main{
             
             else
             {
+                
+                //drawScene(prog, cam, elapsed);
                 
                 sunfbo.bind();
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -348,93 +358,46 @@ public class Main{
                 //as light approaches the edge of the screen,
                 //reduce alpha fade to zero, along with sprites.
                 float alphaScale = 0.f;
+                float qx = Math.abs(lPos.x);
+                float qy = Math.abs(lPos.y);
+                float q  = qx > qy ? qx : qy;
+                //when q reaches 0.9, start fade to zero.
+                //end fade when q reaches 1.2.
+                float fstart = 0.9f;
+                float fend = 1.2f;
+                alphaScale = 1.0f - (q - fstart) / (fend - fstart);
                 
-                /* 
-//still left to port:
-                    var qx = Math.abs(p[0]);
-                    var qy = Math.abs(p[1]);
-                    var q = (qx>qy)?qx:qy;
-                    //when q reaches 0.9, start fade to zero.
-                    //end fade when q reaches 1.2
-                    var fstart=0.9;
-                    var fend=1.2;
-                    alphascale = 1.0-(q-fstart)/(fend-fstart);
-                    if(alphascale < 0.0 )
-                        alphascale=0.0;
-                    if(alphascale > 1.0 )
-                        alphascale=1.0;
-    
-                    //draw lens flare sprites and glow sprite
-                    gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
-                    flareprog.use();
-                    flareprog.setUniform("avgillumtexture",avgillumfbo.texture);
-                    flareprog.setUniform("alphascale",alphascale);
-                    //draw a glow around light source
-                    if(1){
-                        flareprog.setUniform("worldMatrix",tdl.translation([p[0],p[1],0]));
-                        flareprog.setUniform("basetexture",glowtex);
-                        usq.draw(flareprog);
-                    }
-
-                    //draw flare sprites
-                    //texture, position, scale
-                    if(1){
-                        var flares=[
-                            [flaretex1,[-0.6,0.25,1.1,1.7], [0.1,0.05,0.15,0.3]],
-                            [flaretex2,[-0.1,0.3,0.5],      [0.14,0.2,0.1]],
-                            [flaretex3,[-0.4,0.4,0.7,1.2],  [0.06,0.04,0.08,0.16]]
-                        ]
-                        for(var i=0;i<flares.length;++i){
-                            flareprog.setUniform("basetexture",flares[i][0]);
-                            var pos = flares[i][1];
-                            var scale = flares[i][2];
-                            for(var j=0;j<pos.length;++j){
-                                var S = tdl.scaling([scale[j],scale[j],scale[j]]);
-                                var t = pos[j];
-                                var px = p[0] + t * (-p[0]);
-                                var py = p[1] + t * (-p[1]);
-                                var T = tdl.translation([px,py,0]);
-                                var M = tdl.mul(S,T);
-                                flareprog.setUniform("worldMatrix",M);
-                                usq.draw(flareprog);
-                            }
-                        }
-                    }
-
-                    avgillumfbo.texture.unbind();
-                */
+                //No clamp method in Java?
+                if(alphaScale < 0.0f)
+                    alphaScale = 0.0f;
+                if(alphaScale > 1.0f)
+                    alphaScale = 1.0f;
+                    
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+                progFlare.use();
+                progFlare.setUniform("avgillumtexture",avgillumfbo.texture);
+                progFlare.setUniform("alphascale",alphaScale);
+                //draw glow around light source.
+                //if(1)?
+                progFlare.setUniform("worldMatrix", math3d.translation(new vec3 (lPos.x, lPos.y, 0.f)));
+                progFlare.setUniform("basetexture", glowTex);
+                usq.draw(progFlare);
                 
-                
-                
-                /*
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                prog.use();
-                prog.setUniform("lightPos",new vec3(50,50,50) );
-                prog.setUniform("lightColor", new vec3(1,1,1));
-                prog.setUniform("transform", trans);
-                prog.setUniform("worldMatrix",mat4.identity());
-                
-                for(int j = 0; j < floorsize; j++)
+                mat4[][] flareTransforms = new mat4[flareSprites.length][];
+                for(FlareSprite fs : flareSprites)
                 {
-                    prog.setUniform("transform", roomTransforms[j]);
-                    room[j].draw(prog);
+                    progFlare.setUniform("basetexture", fs.sprite);
+                    for(int i = 0; i < fs.position.length; i++)
+                    {
+                        mat4 flareTrans = fs.GetTransform(new vec3(lPos.x, lPos.y, lPos.z), i);
+                        progFlare.setUniform("worldMatrix", flareTrans);
+                        usq.draw(progFlare);
+                    }
+                    
                 }
-                for(int i = 0; i < activeBullets.size(); i++)
-                {
-                    activeBullets.get(i).update(elapsed, prog);
-                }
-                pc.Update(elapsed, prog);
-                cam.draw(prog);
-                */
+                avgillumfbo.texture.unbind();
+                
             }
-            
-            
-            
-            
-            
-            
-            
-            
             //shadowmapping stuff (kills framerate, doesn't work--doing something wrong here)
             /*
             int[] depthMap = new int[1];
@@ -453,20 +416,6 @@ public class Main{
             glReadBuffer(GL_NONE);
             depthMapFBO.unbind();
             */
-            
-            
-
-            
-            //fbo1.unbind();
-
-            //this is also for later...
-/*
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            blurprog.use();
-            blurprog.setUniform("diffuse_texture",fbo1.texture);
-            usq.draw(blurprog);
-            blurprog.setUniform("diffuse_texture",dummytex);
-*/
 
             SDL_GL_SwapWindow(win);
 
@@ -475,8 +424,9 @@ public class Main{
     }//end main
     public static void drawScene(Program prog, Camera cam, float elapsed)
     {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         prog.use();
-        prog.setUniform("lightPos",new vec3(50,50,50) );
+        prog.setUniform("lightPos",new vec3(10,10,10) );
         prog.setUniform("lightColor", new vec3(1,1,1));
         prog.setUniform("transform", trans);
         prog.setUniform("worldMatrix",mat4.identity());
