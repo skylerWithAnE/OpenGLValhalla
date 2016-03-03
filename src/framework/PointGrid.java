@@ -10,6 +10,9 @@ import static JGL.JGL.glBindBuffer;
 import static JGL.JGL.glGenBuffers;
 import static JGL.JGL.glBufferData;
 import static JGL.JGL.glDrawArrays;*/
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
 /**
@@ -51,16 +54,22 @@ public class PointGrid {
         int[] tmp = new int[1];
         glGenBuffers(1,tmp);
         this.vbuff = tmp[0];
-        this.vdata = new byte[pts.size()]; //need to figure out how to assign points into vdata.
-        /*
-        ByteBuffer bb = ByteBuffer.allocate(pts.size() * 3 * 4);
+        this.vdata = new byte[pts.size()]; 
+        ByteBuffer bb = ByteBuffer.allocate(pts.size() * 3* 4);
         bb.order(ByteOrder.nativeOrder());
         FloatBuffer fb = bb.asFloatBuffer();
+        float[] fa = new float[pts.size()];
+        int count = 0;
         
         //convert pts from ArrayList into a float array.
         
+        for(Float f : pts) 
+        {
+            fa[count++] = (f != null ? f : Float.NaN); 
+        } //http://stackoverflow.com/questions/4837568/java-convert-arraylistfloat-to-float
+        
         fb.put(fa);
-        */
+        
         glBindBuffer( GL_ARRAY_BUFFER, this.vbuff );
         glBufferData( GL_ARRAY_BUFFER, this.vdata.length , this.vdata, GL_STATIC_DRAW );
         

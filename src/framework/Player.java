@@ -22,7 +22,7 @@ public class Player {
         this.position = new vec3();
         this.transform = math3d.translation(initialPosition);
         this.velocity = new vec3();
-        this.playerShape = new Mesh("assets/torus.obj.mesh");
+        this.playerShape = new Mesh("assets/player.obj.mesh");
     }
     
     public void Update(float dT, Program prog)

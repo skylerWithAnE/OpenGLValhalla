@@ -25,7 +25,7 @@ public class Bullet {
         this.velocity = initialVelocity;
         this.transform = new mat4();
         this.transform = initialTransform;
-        this.bulletShape = new Mesh("assets/torus.obj.mesh");
+        this.bulletShape = new Mesh("assets/bullet.obj.mesh");
     }
     
     public void update(float dT, Program prog)
