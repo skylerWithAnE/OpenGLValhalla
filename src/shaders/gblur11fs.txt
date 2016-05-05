@@ -1,5 +1,26 @@
 #version 150
 
+const mat3 M2 = mat3(
+    6.0014, -1.332, 0.3008, 
+    -2.7008,3.1029, -1.0882, 
+    -1.7996, -5.7721, 5.6268 );
+
+vec3 fromlogluv(vec4 X)
+{
+    float U=X[0];
+    float V=X[1];
+    float Lhigh=X[2];
+    float Llow=X[3];
+    float L = Llow+Lhigh*255.0;
+    vec3 Q;
+    Q[1] = exp2( (L-127.0)/2.0 );
+    Q[2] = Q[1]/V;
+    Q[0] = U*Q[2];
+    vec3 rgb = Q*M2;
+    rgb = max(rgb,0.0);
+    return rgb;
+}
+
 vec4 gaussblur11(
          const in sampler2D tex,
          const in vec2 tex_dist, 
@@ -42,5 +63,6 @@ out vec4 color;
 
 void main(){
     vec4 c = gaussblur11(tex,tex_size.zw,v_texcoord.st,deltas.st);
+    c.rgb = fromlogluv(c);
     color = c;
 }

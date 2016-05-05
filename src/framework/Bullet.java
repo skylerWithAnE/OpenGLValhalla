@@ -49,7 +49,7 @@ public class Bullet {
         this.transform = trans;
         //prog.setUniform("transform", this.transform);
         prog.setUniform("worldMatrix", this.transform.mul(mat4.identity()));
-        prog.setUniform("emissionscale", 1f);
+        prog.setUniform("emissionscale", 100f);
         this.bulletShape.draw(prog);
         //remove stored uniform so that only the bullet is glowing green--not everything.
         prog.setUniform("emissionscale", 0f);

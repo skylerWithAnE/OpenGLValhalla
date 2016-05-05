@@ -61,7 +61,6 @@ public class Player {
     {
         //prog.setUniform("transform", this.transform);
         prog.setUniform("worldMatrix", transform.mul(mat4.identity()));
-        prog.setUniform("diffusemtl", new vec4(1f,0f,0f,1f));
         this.playerShape.draw(prog);
     }
     

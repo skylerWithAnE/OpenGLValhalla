@@ -30,6 +30,7 @@ public class Main{
     static LinkedList<Bullet> activeBullets = new LinkedList<Bullet>();
     static Mesh[] room;
     static Mesh sun;
+    static Mesh bigplane;
     static mat4[] roomTransforms;
     static vec2[] gridPositions;
     static mat4 trans = translation(new vec3(.0f,0.0f,.0f));
@@ -176,6 +177,7 @@ public class Main{
             vec2 position = new vec2(roomTransforms[i].get(3,0), roomTransforms[i].get(3,1));
             boundingBoxes.add(new AABB(size,size,position.x,position.y));
         }
+        bigplane = new Mesh("assets/hugeground.obj.mesh");
         
         cam.walk(-3f);
         sun = new Mesh("assets/bullet.obj.mesh");
@@ -498,9 +500,10 @@ public class Main{
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         prog.use();
+        prog.setUniform("diffusemtl", new vec4(1,1,1,1));
         prog.setUniform("fogNear", 20000);
         prog.setUniform("fogDelta", 180000);
-        prog.setUniform("fogColor", new vec4(1,0,0,1));
+        prog.setUniform("fogColor", new vec4(1,1,1,1));
         prog.setUniform("lightPos",new vec3(30,30,30) );
         prog.setUniform("lightColor", new vec3(1,1,1));
         prog.setUniform("transform", trans);
@@ -508,7 +511,9 @@ public class Main{
         cam.draw(prog);
         prog.setUniform("worldMatrix", translation(new vec3(0f,30f,30f)));
         sun.draw(prog);
-              
+        prog.setUniform("worldMatrix", translation(new vec3(0f,0f,-50f)));
+        bigplane.draw(prog);      
+        
         for(int j = 0; j < floorsize; j++)
         {
             prog.setUniform("worldMatrix", roomTransforms[j]);
@@ -538,12 +543,19 @@ public class Main{
     {
         //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         prog.use();
-        prog.setUniform("lightPos",new vec3(30,30,30) );
+        prog.setUniform("diffustmtl", new vec4(0f,0f,0f,1f));
+        prog.setUniform("fogNear", 20000);
+        prog.setUniform("fogDelta", 180000);
+        prog.setUniform("fogColor", new vec4(1,1,1,1));
+        prog.setUniform("lightPos",new vec3(30f,30f,30f) );
         prog.setUniform("lightColor", lightColor);
         prog.setUniform("transform", trans);
         prog.setUniform("worldMatrix",mat4.identity());
         cam.draw(prog);
+        prog.setUniform("worldMatrix", translation(new vec3(0f,30f,30f)));
         sun.draw(prog);
+        prog.setUniform("worldMatrix", translation(new vec3(0f,0f,-50f)));
+        bigplane.draw(prog);
         
         prog.setUniform("emissionscale", 1.f);
         for(int j = 0; j < floorsize; j++)
