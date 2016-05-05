@@ -119,8 +119,6 @@ public class Main{
         cam.lookAt( new vec3(0,0,5), new vec3(0,0,0), new vec3(0,1,0) );
 
         prev = (float)(System.nanoTime()*1E-9);
-//        vec3 vect = new vec3(.0f,0.0f,.0f);
-//        mat4 trans = translation(new vec3(.0f,0.0f,.0f));
         trans = trans.mul(math3d.axisRotation(1.0f, 0.0f, 0.0f, 0f));
 
         SDL_Event ev=new SDL_Event();
@@ -133,8 +131,6 @@ public class Main{
         float[] matTmp = new float[16];
         for(int l = 0; l < 16; l++)
             matTmp[l] = 1.f;
-        //mat4 roomTransform = translation(new vec3());
-        //int floorsize = 256;
         room = new Mesh[floorsize];
         
         int row = 0;
@@ -148,8 +144,6 @@ public class Main{
         }
         
         sun = new Mesh("assets/bullet.obj.mesh");
-        
-        //float[] frameRate = new float[2];
         while(true){
             while(true){
                 int rv = SDL_PollEvent(ev);
@@ -169,15 +163,6 @@ public class Main{
 
             float now = (float)(System.nanoTime()*1E-9);
             float elapsed = now-prev;
-//            frameRate[0] += elapsed;
-//            frameRate[1]++;
-//            if (frameRate[0] >= 1f)
-//            {
-//                frameRate[0] = 0;
-//                System.out.println(frameRate[1]);
-//                frameRate[1] = 0;
-//            }
-            
             {
                 shootDelay += elapsed;
                 if(shootDelay > fireRate)
@@ -219,25 +204,31 @@ public class Main{
                 if( keys.contains(SDLK_UP))
                 {
                     canShoot = false;
-                    activeBullets.add(new Bullet(pc.getTransform(), new vec3(0.f,1.f,0.f)));
+                    activeBullets.add(new Bullet(pc.getBulletSpawnLocation(), new vec3(0.f,1.f,0.f)));
 
                 }
                 if( keys.contains(SDLK_DOWN))
                 {
                     canShoot = false;
-                    activeBullets.add(new Bullet(pc.getTransform(), new vec3(0.f,-1.f,0.f)));
+                    activeBullets.add(new Bullet(pc.getBulletSpawnLocation(), new vec3(0.f,-1.f,0.f)));
                 }
                 if(keys.contains(SDLK_LEFT))
                 {
                     canShoot = false;
-                    activeBullets.add(new Bullet(pc.getTransform(), new vec3(-1.f,0.f,0.f)));
+                    activeBullets.add(new Bullet(pc.getBulletSpawnLocation(), new vec3(-1.f,0.f,0.f)));
                 }
                 if(keys.contains(SDLK_RIGHT))
                 {
                     canShoot = false;
-                    activeBullets.add(new Bullet(pc.getTransform(), new vec3(1.f,0.f,0.f)));
+                    activeBullets.add(new Bullet(pc.getBulletSpawnLocation(), new vec3(1.f,0.f,0.f)));
                 }
             }
+            
+//            if(keys.contains(SDLK_o))
+//                pc.adjustOffset(0,-1*elapsed);
+//            if(keys.contains(SDLK_p))
+//                pc.adjustOffset(0,1*elapsed);
+            
             if(keys.contains(SDLK_SPACE))
             {
                 if(!blurDraw)
@@ -268,27 +259,7 @@ public class Main{
                 fbo1.bind(); //bind this fbo, draw unblurred
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 drawScene(prog, cam, elapsed);
-                /*
-                prog.use();
-                prog.setUniform("lightPos",new vec3(50,50,50) );
-                prog.setUniform("lightColor", new vec3(1,0,0));
-                prog.setUniform("transform", trans);
-                prog.setUniform("worldMatrix",mat4.identity());
-                cam.draw(prog);
-                for(int j = 0; j < floorsize; j++)
-                {
-                    prog.setUniform("transform", roomTransforms[j]);
-                    room[j].draw(prog);
-                }
-                for(int i = 0; i < activeBullets.size(); i++)
-                {
-                    activeBullets.get(i).update(elapsed, prog);
-                }
-                pc.Update(elapsed, prog);
-                */
                 fbo1.unbind();
-
-
 
                 //draw a blurred copy of the scene to fbo3
                 progBlur.use();
@@ -315,9 +286,55 @@ public class Main{
             
             else
             {
+                //using logluv, disable blending
+                glDisable(GL_BLEND);
+                fbo2.texture.unbind();
+                fbo2.bind();
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                drawSceneFBO(prog, cam, new vec3(10,10,10));
+                fbo2.unbind();
                 
-                //drawScene(prog, cam, elapsed);
+                for(int i = 0; i < 5; ++i)
+                {
+                    //horizontal gauss blur; read from fbo1, write to fbo2.
+                    fbo3.texture.unbind();
+                    fbo3.bind();
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                    progGBlur.use();
+                    progGBlur.setUniform("tex", fbo2.texture);
+                    progGBlur.setUniform("deltas",new vec2(1,0));
+                    usq.draw(progGBlur);
+                    fbo3.unbind();
+                    fbo2.texture.unbind();
+                    
+                    fbo2.bind();
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                    progGBlur.setUniform("deltas",new vec2(0,1));
+                    progGBlur.setUniform("tex", fbo3.texture);
+                    usq.draw(progGBlur);
+                    fbo2.unbind();
+                }
                 
+                fbo3.texture.unbind();
+                fbo3.bind();
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                drawSceneFBO(prog, cam, new vec3(10,10,10));
+                fbo3.unbind();
+                
+                //now combine the two together.
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_ONE, GL_ONE);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                progUSQ.use();
+                progUSQ.setUniform("basetexture", fbo2.texture);
+                progUSQ.setUniform("worldMatrix", mat4.identity());
+                usq.draw(progUSQ);
+                progUSQ.setUniform("basetexture", fbo3.texture);
+                usq.draw(progUSQ);
+                //reset blendFunc
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                
+                //HDR stuff
                 sunfbo.bind();
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 suncam.lookAt   (new vec3(cam.eye.x, cam.eye.y, cam.eye.z),
@@ -427,21 +444,48 @@ public class Main{
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         prog.use();
         prog.setUniform("lightPos",new vec3(10,10,10) );
-        prog.setUniform("lightColor", new vec3(1,1,1));
+        prog.setUniform("lightColor", new vec3(0.9,0.9,0.9));
         prog.setUniform("transform", trans);
         prog.setUniform("worldMatrix",mat4.identity());
         cam.draw(prog);
         sun.draw(prog);
+        
         for(int j = 0; j < floorsize; j++)
         {
             prog.setUniform("transform", roomTransforms[j]);
             room[j].draw(prog);
+            
         }
         for(int i = 0; i < activeBullets.size(); i++)
         {
             activeBullets.get(i).update(elapsed, prog);
         }
         pc.Update(elapsed, prog);
+        
+    }
+    
+        public static void drawSceneFBO(Program prog, Camera cam, vec3 lightColor)
+    {
+        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        prog.use();
+        prog.setUniform("lightPos",new vec3(10,10,10) );
+        prog.setUniform("lightColor", lightColor);
+        prog.setUniform("transform", trans);
+        prog.setUniform("worldMatrix",mat4.identity());
+        cam.draw(prog);
+        sun.draw(prog);
+        
+        for(int j = 0; j < floorsize; j++)
+        {
+            prog.setUniform("transform", roomTransforms[j]);
+            room[j].draw(prog);
+            
+        }
+        for(int i = 0; i < activeBullets.size(); i++)
+        {
+            activeBullets.get(i).update(0, prog);
+        }
+        pc.Update(0, prog);
         
     }
 }
