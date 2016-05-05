@@ -12,7 +12,7 @@ out vec3 v_po;
 uniform mat4 projMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 worldMatrix;
-uniform mat4 transform;
+//uniform mat4 transform;
 
 void main(){
     v_po = a_position;
@@ -24,7 +24,7 @@ void main(){
     v_pw = p.xyz;
     p = p * viewMatrix;
     p = p * projMatrix;
-    p = p * transform;
+    //p = p * transform;
     gl_Position = p;
     v_normal = (vec4(a_normal,0.0) * worldMatrix).xyz;
 }

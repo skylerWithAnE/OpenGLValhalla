@@ -26,7 +26,7 @@ public class Player {
         this.transform = math3d.translation(initialPosition);
         this.velocity = new vec3();
         this.playerShape = new Mesh("assets/player.obj.mesh");
-        this.bulletOffset = new vec3(-0.035,0.15,0);
+        this.bulletOffset = new vec3(-0.27,1.04,0);
         this.boundingBox = new AABB(0.2f,0.2f, initialPosition.x, initialPosition.y);
     }
     
@@ -59,7 +59,8 @@ public class Player {
     
     private void Draw(Program prog)
     {
-        prog.setUniform("transform", this.transform);
+        //prog.setUniform("transform", this.transform);
+        prog.setUniform("worldMatrix", transform.mul(mat4.identity()));
         this.playerShape.draw(prog);
     }
     

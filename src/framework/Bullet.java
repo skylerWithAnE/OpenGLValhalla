@@ -24,7 +24,7 @@ public class Bullet {
     public Bullet(mat4 initialTransform, vec3 initialVelocity)
     {
         lifetime = 0.45f;
-        speed = 0.8f;
+        speed = 4f;
         this.velocity = initialVelocity;
         this.transform = new mat4();
         this.transform = initialTransform;
@@ -47,7 +47,8 @@ public class Bullet {
 //        }
         mat4 trans = this.transform.mul(math3d.translation(this.velocity.mul((speed*dT))));
         this.transform = trans;
-        prog.setUniform("transform", this.transform);
+        //prog.setUniform("transform", this.transform);
+        prog.setUniform("worldMatrix", this.transform.mul(mat4.identity()));
         prog.setUniform("emissionscale", 1f);
         this.bulletShape.draw(prog);
         //remove stored uniform so that only the bullet is glowing green--not everything.

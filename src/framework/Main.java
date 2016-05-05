@@ -210,23 +210,23 @@ public class Main{
 
             if( keys.contains(SDLK_w ))
             {
-                cam.strafe(new vec3(0.f,3f*elapsed,0.f));
-                pc.velocity = new vec3(pc.velocity.x,0.5f,0.f);
+                cam.strafe(new vec3(0.f,1f*elapsed,0.f));
+                pc.velocity = new vec3(pc.velocity.x,1f,0.f);
             }
             if( keys.contains(SDLK_s))
             {
-                cam.strafe(new vec3(0.f,-3f*elapsed,0.f));
-                pc.velocity = new vec3(pc.velocity.x,-0.5f,0.f);
+                cam.strafe(new vec3(0.f,-1f*elapsed,0.f));
+                pc.velocity = new vec3(pc.velocity.x,-1f,0.f);
             }
             if( keys.contains(SDLK_a))
             {
-                cam.strafe(new vec3(-3f*elapsed,0.f,0.f));
-                pc.velocity = new vec3(-0.5f,pc.velocity.y,0.f);
+                cam.strafe(new vec3(-1f*elapsed,0.f,0.f));
+                pc.velocity = new vec3(-1f,pc.velocity.y,0.f);
             }
             if( keys.contains(SDLK_d))
             {
-                cam.strafe(new vec3(3f*elapsed,0.f,0.f));
-                pc.velocity = new vec3(0.5f,pc.velocity.y,0.f);
+                cam.strafe(new vec3(1f*elapsed,0.f,0.f));
+                pc.velocity = new vec3(1f,pc.velocity.y,0.f);
             }
             if( keys.contains(SDLK_i))
                 cam.walk(1.5f*elapsed);
@@ -531,7 +531,7 @@ public class Main{
         prog.setUniform("emissionscale", 1.f);
         for(int j = 0; j < floorsize; j++)
         {
-            prog.setUniform("transform", roomTransforms[j]);
+            prog.setUniform("worldMatrix", roomTransforms[j].mul(mat4.identity()));
             if(litUpTiles.contains(j)) {
                 room[j].emit_texture = emissivemap;
                 room[j].texture = floorhighlight;
@@ -570,7 +570,7 @@ public class Main{
                     
             }
         }
-        System.out.println(litUpTiles.size());
+        //System.out.println(litUpTiles.size());
     }
 }
 
