@@ -27,6 +27,7 @@ public class Player {
         this.velocity = new vec3();
         this.playerShape = new Mesh("assets/player.obj.mesh");
         this.bulletOffset = new vec3(-0.035,0.15,0);
+        this.boundingBox = new AABB(0.2f,0.2f, initialPosition.x, initialPosition.y);
     }
     
     public void adjustOffset(float dirX, float dirY)

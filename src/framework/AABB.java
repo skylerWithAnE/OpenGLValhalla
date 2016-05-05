@@ -15,6 +15,7 @@ public class AABB {
     float x;
     float y;
     
+    
     AABB(float width, float height, float x, float y) {
         this.width = width;
         this.height = height;
@@ -29,7 +30,6 @@ public class AABB {
     }
     
     public void update(float x, float y) {
-        //time dilation handled by the moving bodies.
         this.x = x;
         this.y = y;
     }
