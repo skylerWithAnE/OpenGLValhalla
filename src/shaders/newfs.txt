@@ -3,15 +3,18 @@
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform vec3 eyePos;
-uniform sampler2D diffuse_texture;
 uniform vec4 diffusemtl;
+
+uniform sampler2D diffuse_texture;
 uniform sampler2D emit_texture;
 uniform sampler2D spec_texture;
+
 uniform float emissionscale;
 uniform float fogNear;
 uniform float fogDelta;
 uniform vec4 fogColor;
 
+#define attenuation vec4(1,0,0,0)
 
 in vec2 v_texcoord;
 in vec3 v_normal;
@@ -82,8 +85,7 @@ void main(){
     
     float fogpct = (eyeDistance - fogNear) / (fogDelta);
     fogpct = clamp(fogpct, 0.0, 1.0);
-    
-    //color = vec4(diffuse.rgb * tc.rgb, tc.a);
+        
     color.rgb = diffusemtl.rgb * diffuse.rgb * tc.rgb;
     color.rgb += specular.rgb;
     color.a = diffusemtl.a * tc.a;

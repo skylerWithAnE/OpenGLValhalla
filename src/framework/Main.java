@@ -52,7 +52,7 @@ public class Main{
         litUpTiles = new LinkedList<>();
         
         SDL_Init(SDL_INIT_VIDEO);
-        long win = SDL_CreateWindow("ETGG 2802",40,60, 512,512, SDL_WINDOW_OPENGL );
+        long win = SDL_CreateWindow("ETGG 2802",40,60, 720,720, SDL_WINDOW_OPENGL );
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,24);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE,8);
@@ -75,6 +75,8 @@ public class Main{
         glGenVertexArrays(1,tmp);
         int vao = tmp[0];
         glBindVertexArray(vao);
+        
+        System.out.println(glGetString(GL_VENDOR)+" "+glGetString(GL_RENDERER));
 
         glClearColor(0.2f,0.4f,0.6f,1.0f);
         glEnable(GL_DEPTH_TEST);
@@ -348,7 +350,7 @@ public class Main{
                 fbo2.unbind();
                 progGBlur.use();
                 
-                for(int i = 0; i < 5; ++i) //RuntimeException when this loop is enabled.
+                for(int i = 0; i < 0; ++i) //RuntimeException when this loop is enabled.
                 {
                     //horizontal gauss blur; read from fbo1, write to fbo2.
                     fbo3.texture.unbind();
@@ -505,7 +507,7 @@ public class Main{
         prog.setUniform("fogDelta", 180000);
         prog.setUniform("fogColor", new vec4(1,1,1,1));
         prog.setUniform("lightPos",new vec3(30,30,30) );
-        prog.setUniform("lightColor", new vec3(1,1,1));
+        prog.setUniform("lightColor", new vec3(15,15,15));
         prog.setUniform("transform", trans);
         prog.setUniform("worldMatrix",mat4.identity());
         cam.draw(prog);
@@ -546,7 +548,7 @@ public class Main{
         prog.setUniform("diffustmtl", new vec4(0f,0f,0f,1f));
         prog.setUniform("fogNear", 20000);
         prog.setUniform("fogDelta", 180000);
-        prog.setUniform("fogColor", new vec4(1,1,1,1));
+        prog.setUniform("fogColor", new vec4(1,1,1,0));
         prog.setUniform("lightPos",new vec3(30f,30f,30f) );
         prog.setUniform("lightColor", lightColor);
         prog.setUniform("transform", trans);
