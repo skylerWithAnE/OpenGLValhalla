@@ -4,6 +4,10 @@ uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform vec3 eyePos;
 uniform sampler2D diffuse_texture;
+uniform sampler2D emit_texture;
+uniform sampler2D spec_texture;
+
+uniform float emissionscale;
 
 
 in vec2 v_texcoord;
@@ -73,5 +77,6 @@ void main(){
     color = vec4(diffuse.rgb * tc.rgb, tc.a);
     color.rgb += specular.rgb;
     color.a = tc.a;
+    color.rgb += emissionscale * texture2D(emit_texture, v_texcoord.st).rgb;
 }
 

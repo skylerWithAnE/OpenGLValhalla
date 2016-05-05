@@ -16,6 +16,12 @@ import framework.math3d.vec4;
 import static framework.math3d.math3d.mul;
 import static framework.math3d.math3d.sub;
 import static framework.math3d.math3d.translation;
+import static framework.math3d.math3d.mul;
+import static framework.math3d.math3d.sub;
+import static framework.math3d.math3d.translation;
+import static framework.math3d.math3d.mul;
+import static framework.math3d.math3d.sub;
+import static framework.math3d.math3d.translation;
 
 
 public class Main{
@@ -76,7 +82,7 @@ public class Main{
         
         Mesh column;
         UnitSquare usq;
-        Framebuffer fbo1, fbo2, fbo3, sunfbo, avgillumfbo, hdrFBO;
+        Framebuffer fbo1, fbo2, fbo3, sunfbo, avgillumfbo, depthMapfbo;
         Texture2D dummytex = new SolidTexture(GL_UNSIGNED_BYTE,0,0,0,0);
         column = new Mesh("assets/usq.obj.mesh");
         usq = new UnitSquare();
@@ -86,10 +92,9 @@ public class Main{
         fbo3 = new Framebuffer(512,512);
         
         //FBOs used for HDR/Glow/Lensflare
-        hdrFBO = new Framebuffer(512,512);
         sunfbo = new Framebuffer(16,16);
         avgillumfbo = new Framebuffer(1,1);
-        //depthMapFBO = new Framebuffer(1024,1024);
+        depthMapfbo = new Framebuffer(512,512);
         
         //Basic Programs
 //        prog = new Program("src/shaders/vs.txt","src/shaders/gs.txt","src/shaders/fs.txt");
@@ -424,23 +429,23 @@ public class Main{
                 
             }
             //shadowmapping stuff (kills framerate, doesn't work--doing something wrong here)
-            /*
-            int[] depthMap = new int[1];
-            glGenTextures(1, depthMap);
-            glBindTexture(GL_TEXTURE_2D, depthMap[0]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 
-                            0, GL_DEPTH_COMPONENT, GL_FLOAT, null);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-            depthMapFBO.bind();
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap[0], 0);
-            glDrawBuffer(GL_NONE);
-            glReadBuffer(GL_NONE);
-            depthMapFBO.unbind();
-            */
+            
+//            int[] depthMap = new int[1];
+//            glGenTextures(1, depthMap);
+//            glBindTexture(GL_TEXTURE_2D, depthMap[0]);
+//            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 
+//                            0, GL_DEPTH_COMPONENT, GL_FLOAT, null);
+//            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+//            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+//
+//            depthMapfbo.bind();
+//            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap[0], 0);
+//            glDrawBuffer(GL_NONE);
+//            glReadBuffer(GL_NONE);
+//            depthMapfbo.unbind();
+            
 
             SDL_GL_SwapWindow(win);
 
@@ -451,11 +456,12 @@ public class Main{
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         prog.use();
-        prog.setUniform("lightPos",new vec3(10,10,10) );
+        prog.setUniform("lightPos",new vec3(30,30,30) );
         prog.setUniform("lightColor", new vec3(1,1,1));
         prog.setUniform("transform", trans);
         prog.setUniform("worldMatrix",mat4.identity());
         cam.draw(prog);
+        prog.setUniform("transform", translation(new vec3(0f,30f,30f)));
         sun.draw(prog);
         
         for(int j = 0; j < floorsize; j++)
@@ -476,7 +482,7 @@ public class Main{
     {
         //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         prog.use();
-        prog.setUniform("lightPos",new vec3(10,10,10) );
+        prog.setUniform("lightPos",new vec3(30,30,30) );
         prog.setUniform("lightColor", lightColor);
         prog.setUniform("transform", trans);
         prog.setUniform("worldMatrix",mat4.identity());
@@ -489,11 +495,11 @@ public class Main{
             room[j].draw(prog);
             
         }
-//        for(int i = 0; i < activeBullets.size(); i++)
-//        {
-//            activeBullets.get(i).update(0, prog);
-//        }
-//        pc.Update(0, prog);
+        for(int i = 0; i < activeBullets.size(); i++)
+        {
+            activeBullets.get(i).update(0, prog);
+        }
+        pc.Update(0, prog);
         
     }
 }

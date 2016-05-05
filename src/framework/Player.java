@@ -45,11 +45,19 @@ public class Player {
     
     public void Update(float dT, Program prog)
     {
-        this.transform = this.transform.mul(math3d.translation(this.velocity.mul(dT)));
+        if(dT > 0) {
+            this.transform = this.transform.mul(math3d.translation(this.velocity.mul(dT)));
+            this.position = this.position.add(this.velocity);
+        }
+        Draw(prog);
+        if(dT > 0)
+            this.velocity = new vec3(0.f,0.f,0.f);
+    }
+    
+    private void Draw(Program prog)
+    {
         prog.setUniform("transform", this.transform);
         this.playerShape.draw(prog);
-        this.position = this.position.add(this.velocity);
-        this.velocity = new vec3(0.f,0.f,0.f);
     }
     
     public mat4 getTransform()

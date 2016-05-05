@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 
 import sys
 import array
@@ -219,6 +219,7 @@ def main():
         ofp.write( ("specular_map "+mdict[maxm]["map_Ks"]+"\n").encode()  ) 
     if "map_Ke" in mdict[maxm]:
         ofp.write( ("emission_map "+mdict[maxm]["map_Ke"]+"\n").encode()  ) 
+        print("hey look an emissive map..");
         
     #write the vertex data
     b = array.array("f",itertools.chain.from_iterable(vdata))
