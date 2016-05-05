@@ -26,7 +26,7 @@ import static framework.math3d.math3d.translation;
 
 public class Main{
     
-    static int floorsize = 1;
+    static int floorsize = 64;
     static LinkedList<Bullet> activeBullets = new LinkedList<Bullet>();
     static Mesh[] room;
     static Mesh sun;
@@ -37,10 +37,18 @@ public class Main{
     static Program pcprog;
     static ImageTexture floorhighlight;
     static ImageTexture floorunhighlight;
+    static ImageTexture emissivemap;
+    static LinkedList<AABB> boundingBoxes; //linked list because ... Uh, reasons.
+    static LinkedList<AABB> movingBoxes;
+    static LinkedList<Integer> litUpTiles;
+    
     
     public static void main(String[] args){
+        boundingBoxes = new LinkedList<>();
+        movingBoxes = new LinkedList<>();
         roomTransforms = new mat4[floorsize];
         gridPositions = new vec2[floorsize];
+        litUpTiles = new LinkedList<>();
         
         SDL_Init(SDL_INIT_VIDEO);
         long win = SDL_CreateWindow("ETGG 2802",40,60, 512,512, SDL_WINDOW_OPENGL );
@@ -140,9 +148,11 @@ public class Main{
         float shootDelay = 0.0f;
         
         pc = new Player(new vec3(0f,0f,0f));
+        movingBoxes.add(pc.boundingBox);
         
         floorhighlight = new ImageTexture("assets/highlightfloor.png");
         floorunhighlight = new ImageTexture("assets/highlightflooroff.png");
+        emissivemap = new ImageTexture("assets/emissivemap.png");
        
         float[] matTmp = new float[16];
         for(int l = 0; l < 16; l++)
@@ -151,17 +161,18 @@ public class Main{
         
         int row = 0;
         int col = 0;
+        float size = 0.1f;
         for(int i = 0; i < floorsize; i++)
         {
             row = i % 8==0 ? row+1 : row;
             col = i % 8==0 ? 0     : col+1;
             room[i] = new Mesh("assets/ground.obj.mesh");
             room[i].texture = floorunhighlight;
-            float x = (row-1)*0.3f;
-            float y = col*0.3f;
-            roomTransforms[i] = translation(new vec3(x,y,0f));
-            gridPositions[i] = new vec2(x,y);
-            //System.out.println((row-1)*0.1f+", "+col*0.1f);
+            float x = (row-1)*size;
+            float y = col*size;
+            roomTransforms[i] = mat4.identity().mul(translation(new vec3(x,y,0f)));
+            vec2 position = new vec2(roomTransforms[i].get(3,0), roomTransforms[i].get(3,1));
+            boundingBoxes.add(new AABB(size,size,position.x,position.y));
         }
         
         cam.walk(-3f);
@@ -242,23 +253,22 @@ public class Main{
                 if( keys.contains(SDLK_UP))
                 {
                     canShoot = false;
-                    activeBullets.add(new Bullet(pc.getBulletSpawnLocation(), new vec3(0.f,1.f,0.f)));
-
+                    spawnBullet(new vec3(0.f,1.f,0.f));
                 }
-                if( keys.contains(SDLK_DOWN))
+                else if( keys.contains(SDLK_DOWN))
                 {
                     canShoot = false;
-                    activeBullets.add(new Bullet(pc.getBulletSpawnLocation(), new vec3(0.f,-1.f,0.f)));
+                    spawnBullet(new vec3(0.f,-1.f,0.f));
                 }
-                if(keys.contains(SDLK_LEFT))
+                else if(keys.contains(SDLK_LEFT))
                 {
                     canShoot = false;
-                    activeBullets.add(new Bullet(pc.getBulletSpawnLocation(), new vec3(-1.f,0.f,0.f)));
+                    spawnBullet(new vec3(-1.f,0.f,0.f));
                 }
-                if(keys.contains(SDLK_RIGHT))
+                else if(keys.contains(SDLK_RIGHT))
                 {
                     canShoot = false;
-                    activeBullets.add(new Bullet(pc.getBulletSpawnLocation(), new vec3(1.f,0.f,0.f)));
+                    spawnBullet(new vec3(1.f,0.f,0.f));
                 }
             }
             
@@ -476,6 +486,7 @@ public class Main{
             
 
             SDL_GL_SwapWindow(win);
+            doCollisionCheck();
 
 
         }//endwhile
@@ -521,6 +532,14 @@ public class Main{
         for(int j = 0; j < floorsize; j++)
         {
             prog.setUniform("transform", roomTransforms[j]);
+            if(litUpTiles.contains(j)) {
+                room[j].emit_texture = emissivemap;
+                room[j].texture = floorhighlight;
+            }
+            else {
+                room[j].emit_texture = null;
+                room[j].texture = floorunhighlight;
+            }
             room[j].draw(prog);
         }
         for(int i = 0; i < activeBullets.size(); i++)
@@ -531,4 +550,27 @@ public class Main{
         pc.Update(0, prog);
         
     }
+    public static void spawnBullet(vec3 initialVelocity) {
+        Bullet b = new Bullet(pc.getBulletSpawnLocation(), initialVelocity);
+                    activeBullets.add(b);
+                    movingBoxes.add(b.boundingBox);
+    }
+    
+    public static void doCollisionCheck() {
+//        for(int l = 0; l < litUpTiles.size(); l++) {
+//            room[litUpTiles.get(l)].emit_texture = null;
+//            room[litUpTiles.get(l)].texture = floorunhighlight;
+//        }
+        litUpTiles.clear();
+        for(int i = 0; i < movingBoxes.size(); i++) {
+            for(int j = 0; j < boundingBoxes.size(); j++) {
+                if(movingBoxes.get(i).overlapCheck(boundingBoxes.get(j))) {
+                    litUpTiles.add(j);
+                }
+                    
+            }
+        }
+        System.out.println(litUpTiles.size());
+    }
 }
+
