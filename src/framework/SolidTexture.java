@@ -10,9 +10,9 @@ import java.nio.FloatBuffer;
 
 public class SolidTexture extends Texture2D{
     int fmt;
-    int w=1, h=1;
     //fmt = GL_FLOAT or GL_UNSIGNED_BYTE
     SolidTexture(int fmt, float r, float g, float b, float a){
+        super(1,1);
         this.fmt=fmt;
         if(  fmt != GL_UNSIGNED_BYTE && fmt != GL_FLOAT )
             throw new RuntimeException("Bad format");

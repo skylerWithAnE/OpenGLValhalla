@@ -16,6 +16,8 @@ public class Player {
     private mat4 transform;
     public vec3 velocity;
     public vec3 position;
+    public vec3 bulletOffset;
+    
     
     public Player(vec3 initialPosition)
     {
@@ -23,6 +25,22 @@ public class Player {
         this.transform = math3d.translation(initialPosition);
         this.velocity = new vec3();
         this.playerShape = new Mesh("assets/player.obj.mesh");
+        this.bulletOffset = new vec3(-0.035,0.15,0);
+    }
+    
+    public void adjustOffset(float dirX, float dirY)
+    {
+        
+        this.bulletOffset = this.bulletOffset.add(new vec3(dirX,dirY,0));
+        System.out.println("in: "+dirX+", "+dirY+" out: "+bulletOffset);
+    }
+    
+    public mat4 getBulletSpawnLocation()
+    {
+        
+        mat4 outTrans = this.transform.mul(math3d.translation(this.bulletOffset));
+        return outTrans;
+        //return this.transform;
     }
     
     public void Update(float dT, Program prog)

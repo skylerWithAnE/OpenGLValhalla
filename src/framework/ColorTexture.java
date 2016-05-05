@@ -9,12 +9,10 @@ import static JGL.JGL.*;
  */
 public class ColorTexture extends Texture2D {
     int fmt;
-    int w,h;
     
     //fmt = GL_FLOAT or GL_UNSIGNED_BYTE
     ColorTexture(int w, int h, int fmt){
-        this.w=w;
-        this.h=h;
+        super(w,h);
         this.fmt=fmt;
         if(  fmt != GL_UNSIGNED_BYTE && fmt != GL_FLOAT )
             throw new RuntimeException("Bad format");

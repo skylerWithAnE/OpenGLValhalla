@@ -21,7 +21,7 @@ public class Bullet {
     
     public Bullet(mat4 initialTransform, vec3 initialVelocity)
     {
-        speed = 8f;
+        speed = 0.8f;
         this.velocity = initialVelocity;
         this.transform = new mat4();
         this.transform = initialTransform;

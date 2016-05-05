@@ -27,6 +27,7 @@ public class Main{
     static mat4[] roomTransforms = new mat4[floorsize];
     static mat4 trans = translation(new vec3(.0f,0.0f,.0f));
     static Player pc;
+    static Program pcprog;
     
     public static void main(String[] args){
         
@@ -75,7 +76,7 @@ public class Main{
         
         Mesh column;
         UnitSquare usq;
-        Framebuffer fbo1, fbo2, fbo3, sunfbo, avgillumfbo;
+        Framebuffer fbo1, fbo2, fbo3, sunfbo, avgillumfbo, hdrFBO;
         Texture2D dummytex = new SolidTexture(GL_UNSIGNED_BYTE,0,0,0,0);
         column = new Mesh("assets/usq.obj.mesh");
         usq = new UnitSquare();
@@ -85,12 +86,15 @@ public class Main{
         fbo3 = new Framebuffer(512,512);
         
         //FBOs used for HDR/Glow/Lensflare
+        hdrFBO = new Framebuffer(512,512);
         sunfbo = new Framebuffer(16,16);
         avgillumfbo = new Framebuffer(1,1);
         //depthMapFBO = new Framebuffer(1024,1024);
         
         //Basic Programs
-        prog = new Program("src/shaders/vs.txt","src/shaders/gs.txt","src/shaders/fs.txt");
+//        prog = new Program("src/shaders/vs.txt","src/shaders/gs.txt","src/shaders/fs.txt");
+        prog = new Program("src/shaders/vs.txt","src/shaders/fs.txt");
+        pcprog = new Program("src/shaders/pcvs.txt","src/shaders/fs.txt");
         
         //Radial Blur Programs
         progBlur = new Program("src/shaders/vsBlur.txt","src/shaders/fsBlur.txt");
@@ -143,6 +147,7 @@ public class Main{
             roomTransforms[i] = translation(new vec3((row-1)*25.0f, col*25.0f, 0.f));
         }
         
+        cam.walk(-3f);
         sun = new Mesh("assets/bullet.obj.mesh");
         while(true){
             while(true){
@@ -177,22 +182,22 @@ public class Main{
             if( keys.contains(SDLK_w ))
             {
                 cam.strafe(new vec3(0.f,1.5f*elapsed,0.f));
-                pc.velocity = new vec3(pc.velocity.x,1.5f,0.f);
+                pc.velocity = new vec3(pc.velocity.x,0.5f,0.f);
             }
             if( keys.contains(SDLK_s))
             {
                 cam.strafe(new vec3(0.f,-1.5f*elapsed,0.f));
-                pc.velocity = new vec3(pc.velocity.x,-1.5f,0.f);
+                pc.velocity = new vec3(pc.velocity.x,-0.5f,0.f);
             }
             if( keys.contains(SDLK_a))
             {
                 cam.strafe(new vec3(-1.5f*elapsed,0.f,0.f));
-                pc.velocity = new vec3(-1.5f,pc.velocity.y,0.f);
+                pc.velocity = new vec3(-0.5f,pc.velocity.y,0.f);
             }
             if( keys.contains(SDLK_d))
             {
                 cam.strafe(new vec3(1.5f*elapsed,0.f,0.f));
-                pc.velocity = new vec3(1.5f,pc.velocity.y,0.f);
+                pc.velocity = new vec3(0.5f,pc.velocity.y,0.f);
             }
             if( keys.contains(SDLK_i))
                 cam.walk(1.5f*elapsed);
@@ -224,10 +229,10 @@ public class Main{
                 }
             }
             
-//            if(keys.contains(SDLK_o))
-//                pc.adjustOffset(0,-1*elapsed);
-//            if(keys.contains(SDLK_p))
-//                pc.adjustOffset(0,1*elapsed);
+            if(keys.contains(SDLK_o))
+                pc.adjustOffset(-1*elapsed,0);
+            if(keys.contains(SDLK_p))
+                pc.adjustOffset(1*elapsed,0);
             
             if(keys.contains(SDLK_SPACE))
             {
@@ -293,14 +298,15 @@ public class Main{
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 drawSceneFBO(prog, cam, new vec3(10,10,10));
                 fbo2.unbind();
+                progGBlur.use();
                 
-                for(int i = 0; i < 5; ++i)
+                for(int i = 0; i < 5; ++i) //RuntimeException when this loop is enabled.
                 {
                     //horizontal gauss blur; read from fbo1, write to fbo2.
                     fbo3.texture.unbind();
                     fbo3.bind();
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                    progGBlur.use();
+                    
                     progGBlur.setUniform("tex", fbo2.texture);
                     progGBlur.setUniform("deltas",new vec2(1,0));
                     usq.draw(progGBlur);
@@ -313,6 +319,8 @@ public class Main{
                     progGBlur.setUniform("tex", fbo3.texture);
                     usq.draw(progGBlur);
                     fbo2.unbind();
+                    
+                    //while(Framebuffer.active_fbo != null) {}
                 }
                 
                 fbo3.texture.unbind();
@@ -444,7 +452,7 @@ public class Main{
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         prog.use();
         prog.setUniform("lightPos",new vec3(10,10,10) );
-        prog.setUniform("lightColor", new vec3(0.9,0.9,0.9));
+        prog.setUniform("lightColor", new vec3(1,1,1));
         prog.setUniform("transform", trans);
         prog.setUniform("worldMatrix",mat4.identity());
         cam.draw(prog);
@@ -481,11 +489,11 @@ public class Main{
             room[j].draw(prog);
             
         }
-        for(int i = 0; i < activeBullets.size(); i++)
-        {
-            activeBullets.get(i).update(0, prog);
-        }
-        pc.Update(0, prog);
+//        for(int i = 0; i < activeBullets.size(); i++)
+//        {
+//            activeBullets.get(i).update(0, prog);
+//        }
+//        pc.Update(0, prog);
         
     }
 }

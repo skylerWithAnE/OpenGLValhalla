@@ -28,7 +28,7 @@ public class Texture {
         tex = tmp[0];
     }
         
-    public void bind(int unit){
+    final public void bind(int unit){
         if( Framebuffer.active_fbo != null ){
             for(int i=0;i<Framebuffer.active_fbo.textures.length;++i){
                 if( Framebuffer.active_fbo.textures[i] == this )
@@ -59,6 +59,10 @@ public class Texture {
     //bookkeeping
     protected int getId(){
         return tex;
+    }
+    
+    static boolean isPowerOf2(int x){
+        return  ((x-1)&x) == 0;
     }
     
 }

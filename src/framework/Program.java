@@ -28,24 +28,12 @@ public class Program{
     private static Program active;
     
     public Program(String vsfname, String fsfname ){
-        init(vsfname,null,fsfname);
-    }
-    public Program(String vsfname,String gsfname, String fsfname){
-        init(vsfname,gsfname,fsfname);
-    }
-    
-    void init(String vsfname, String gsfname, String fsfname){
         
         int vs = make_shader(vsfname, GL_VERTEX_SHADER);
-        int gs=0;
-        if( gsfname != null )
-            gs = make_shader( gsfname, GL_GEOMETRY_SHADER);
         int fs = make_shader(fsfname, GL_FRAGMENT_SHADER);
         
         prog = glCreateProgram();
         glAttachShader(prog,vs);
-        if( gs != 0 )
-            glAttachShader(prog,gs);
         glAttachShader(prog,fs);
         
         //set attribute locations
@@ -107,10 +95,10 @@ public class Program{
                 setter = new Vec2Setter(nm_,uloc);
             else if(ty[0] == GL_FLOAT && sz[0] == 1 )
                 setter = new FloatSetter(nm_,uloc);
-            else if( ty[0] == GL_SAMPLER_2D && sz[0] == 1 ){
-                setter = new Sampler2DSetter(nm_,uloc,texcount);
-                texcount++;
-            }
+            else if( ty[0] == GL_SAMPLER_2D && sz[0] == 1 )
+                setter = new Sampler2DSetter(nm_,uloc,texcount++);
+            else if( ty[0] == GL_SAMPLER_CUBE && sz[0] == 1 )
+                setter = new SamplerCubeSetter(nm_,uloc,texcount++);
             else
                 throw new RuntimeException("Don't know about type for uniform "+nm_);
 
@@ -154,7 +142,7 @@ public class Program{
         else if( value instanceof Texture )
             ob = value;
         else
-            throw new RuntimeException("Don't know about this item's type: "+name+" "+value);
+            throw new RuntimeException("Don't know about this item's type: name="+name+" value="+value);
         currentuniforms.put(name, ob);
         
         if( uniforms.keySet().contains(name))
@@ -252,6 +240,21 @@ public class Program{
             if( ! (o instanceof Texture2D) )
                 throw new RuntimeException("Not a Texture2D");
             Texture2D v =  (Texture2D) o;
+            v.bind(unit);
+            glUniform1i(i,unit);
+        }
+    }
+    class SamplerCubeSetter extends UniformSetter{
+        int unit;
+        public SamplerCubeSetter(String name, int idx, int unit){
+            super(name,idx);
+            this.unit=unit;
+        }
+        @Override
+        public void set(Object o){
+            if( ! (o instanceof CubeTexture) )
+                throw new RuntimeException("Not a CubeTexture");
+            CubeTexture v =  (CubeTexture) o;
             v.bind(unit);
             glUniform1i(i,unit);
         }
