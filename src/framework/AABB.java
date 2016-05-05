@@ -26,7 +26,7 @@ public class AABB {
     public boolean overlapCheck(AABB other) {
         
         return (this.x < other.x + other.width && this.x + this.width > other.x
-                && this.y < other.y + other.height && this.height + other.y > other.y);
+                && this.y < other.y + other.height && this.height + this.y > other.y);
     }
     
     public void update(float x, float y) {

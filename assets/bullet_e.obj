@@ -1,4 +1,4 @@
-# Blender v2.76 (sub 0) OBJ File: 'bullet.blend'
+# Blender v2.76 (sub 0) OBJ File: ''
 # www.blender.org
 mtllib bullet_e.mtl
 o Icosphere
@@ -124,7 +124,7 @@ vn 0.331300 -0.943500 -0.000000
 vn -0.038500 -0.661700 0.748800
 vn 0.187600 -0.794700 0.577300
 vn 0.471300 -0.661700 0.583100
-usemtl Material.001
+usemtl Material.003
 s 1
 f 1//1 2//1 3//1
 f 4//2 2//2 5//2

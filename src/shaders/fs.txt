@@ -4,11 +4,13 @@ uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform vec3 eyePos;
 uniform sampler2D diffuse_texture;
+uniform vec4 diffusemtl;
 uniform sampler2D emit_texture;
 uniform sampler2D spec_texture;
-
 uniform float emissionscale;
-
+uniform float fogNear;
+uniform float fogDelta;
+uniform vec4 fogColor;
 
 in vec2 v_texcoord;
 in vec3 v_normal;
@@ -60,6 +62,9 @@ void main(){
     vec3 N = normalize(v_normal);
     vec3 V = normalize(eyePos - v_pw);
     vec3 L = (lightPos - v_pw);
+
+    float eyeDistance = length(V);
+
     vec3 diffuse;
     vec3 specular;
     float Ldist = length(L);
@@ -73,10 +78,16 @@ void main(){
     sp = pow(sp,32.0); 
     sp = clamp(sp,0.0,1.0);
     specular = sp * lightColor.rgb;
-    //color = vec4( dp*tc.rgb + vec3(sp), tc.a );
+    
+    float fogpct = (eyeDistance - fogNear) / (fogDelta);
+    fogpct = clamp(fogpct, 0.0, 1.0);
+    
     color = vec4(diffuse.rgb * tc.rgb, tc.a);
     color.rgb += specular.rgb;
-    color.a = tc.a;
+    color.a = 1;
     color.rgb += emissionscale * texture2D(emit_texture, v_texcoord.st).rgb;
+    vec4 c = mix(color, fogColor, fogpct);
+    color = tologluv(c.rgb);
+    //gl_FragColor = tologluv(c.rgb);
 }
 

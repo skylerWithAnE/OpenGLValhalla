@@ -6,6 +6,7 @@
 package framework;
 import framework.math3d.mat4;
 import framework.math3d.vec3;
+import framework.math3d.vec4;
 import framework.math3d.math3d;
 /**
  *
@@ -19,7 +20,6 @@ public class Player {
     public vec3 position;
     public vec3 bulletOffset;
     
-    
     public Player(vec3 initialPosition)
     {
         this.position = new vec3();
@@ -27,7 +27,7 @@ public class Player {
         this.velocity = new vec3();
         this.playerShape = new Mesh("assets/player.obj.mesh");
         this.bulletOffset = new vec3(-0.27,1.04,0);
-        this.boundingBox = new AABB(0.2f,0.2f, initialPosition.x, initialPosition.y);
+        this.boundingBox = new AABB(1f,1f, initialPosition.x, initialPosition.y);
     }
     
     public void adjustOffset(float dirX, float dirY)
@@ -50,7 +50,7 @@ public class Player {
         if(dT > 0) {
             this.transform = this.transform.mul(math3d.translation(this.velocity.mul(dT)));
             this.position = this.position.add(this.velocity);
-            this.boundingBox.update(this.position.x, this.position.y);
+            this.boundingBox.update(this.transform.get(3,0)+bulletOffset.x, this.transform.get(3,1)+bulletOffset.y);
         }
         Draw(prog);
         if(dT > 0)
@@ -61,6 +61,7 @@ public class Player {
     {
         //prog.setUniform("transform", this.transform);
         prog.setUniform("worldMatrix", transform.mul(mat4.identity()));
+        prog.setUniform("diffusemtl", new vec4(1f,0f,0f,1f));
         this.playerShape.draw(prog);
     }
     

@@ -84,7 +84,7 @@ public class Main{
 
         Set<Integer> keys = new TreeSet<>();
         Camera cam, suncam;
-        Program prog, progBlur, prog3, progGBlur, progUSQ, progSun, progPG, progFlare;
+        Program prog, progLogluv, progBlur, prog3, progGBlur, progUSQ, progSun, progPG, progFlare;
         float prev;
         
         //blur variables
@@ -122,6 +122,7 @@ public class Main{
         progSun = new Program("src/shaders/sunvs.txt","src/shaders/sunfs.txt");
         progPG = new Program("src/shaders/pgvs.txt","src/shaders/pgfs.txt");
         progFlare = new Program("src/shaders/flarevs.txt","src/shaders/flarefs.txt");
+        progLogluv = new Program("src/shaders/vs.txt","src/shaders/newfs.txt");
         
         //Flare sprites
         FlareSprite[] flareSprites = new FlareSprite[3];
@@ -161,12 +162,13 @@ public class Main{
         
         int row = 0;
         int col = 0;
-        float size = 0.1f;
+        int sqr = (int)Math.sqrt(floorsize);
+        float size = 1f;
         for(int i = 0; i < floorsize; i++)
         {
-            row = i % 8==0 ? row+1 : row;
-            col = i % 8==0 ? 0     : col+1;
-            room[i] = new Mesh("assets/ground.obj.mesh");
+            row = i % sqr==0 ? row+1 : row;
+            col = i % sqr==0 ? 0     : col+1;
+            room[i] = new Mesh("assets/floor2.obj.mesh");
             room[i].texture = floorunhighlight;
             float x = (row-1)*size;
             float y = col*size;
@@ -210,23 +212,23 @@ public class Main{
 
             if( keys.contains(SDLK_w ))
             {
-                cam.strafe(new vec3(0.f,1f*elapsed,0.f));
-                pc.velocity = new vec3(pc.velocity.x,1f,0.f);
+                cam.strafe(new vec3(0.f,2f*elapsed,0.f));
+                pc.velocity = new vec3(pc.velocity.x,2f,0.f);
             }
             if( keys.contains(SDLK_s))
             {
-                cam.strafe(new vec3(0.f,-1f*elapsed,0.f));
-                pc.velocity = new vec3(pc.velocity.x,-1f,0.f);
+                cam.strafe(new vec3(0.f,-2f*elapsed,0.f));
+                pc.velocity = new vec3(pc.velocity.x,-2f,0.f);
             }
             if( keys.contains(SDLK_a))
             {
-                cam.strafe(new vec3(-1f*elapsed,0.f,0.f));
-                pc.velocity = new vec3(-1f,pc.velocity.y,0.f);
+                cam.strafe(new vec3(-2f*elapsed,0.f,0.f));
+                pc.velocity = new vec3(-2f,pc.velocity.y,0.f);
             }
             if( keys.contains(SDLK_d))
             {
-                cam.strafe(new vec3(1f*elapsed,0.f,0.f));
-                pc.velocity = new vec3(1f,pc.velocity.y,0.f);
+                cam.strafe(new vec3(2f*elapsed,0.f,0.f));
+                pc.velocity = new vec3(2f,pc.velocity.y,0.f);
             }
             if( keys.contains(SDLK_i))
                 cam.walk(1.5f*elapsed);
@@ -336,6 +338,7 @@ public class Main{
             {
                 //using logluv, disable blending
                 glDisable(GL_BLEND);
+                
                 fbo2.texture.unbind();
                 fbo2.bind();
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -495,24 +498,38 @@ public class Main{
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         prog.use();
+        prog.setUniform("fogNear", 20000);
+        prog.setUniform("fogDelta", 180000);
+        prog.setUniform("fogColor", new vec4(1,0,0,1));
         prog.setUniform("lightPos",new vec3(30,30,30) );
         prog.setUniform("lightColor", new vec3(1,1,1));
         prog.setUniform("transform", trans);
         prog.setUniform("worldMatrix",mat4.identity());
         cam.draw(prog);
-        prog.setUniform("transform", translation(new vec3(0f,30f,30f)));
+        prog.setUniform("worldMatrix", translation(new vec3(0f,30f,30f)));
         sun.draw(prog);
-        
+              
         for(int j = 0; j < floorsize; j++)
         {
-            prog.setUniform("transform", roomTransforms[j]);
+            prog.setUniform("worldMatrix", roomTransforms[j]);
+            if(litUpTiles.contains(j)) {
+                prog.setUniform("emissionscale", 1f);
+                room[j].emit_texture = emissivemap;
+                room[j].texture = floorhighlight;
+            }
+            else {
+                room[j].emit_texture = null;
+                room[j].texture = floorunhighlight;
+            }
             room[j].draw(prog);
+            prog.setUniform("emissionscale", 0f);
             
         }
         for(int i = 0; i < activeBullets.size(); i++)
         {
             activeBullets.get(i).update(elapsed, prog);
         }
+        //prog.setUniform("emissionscale", 0f);
         pc.Update(elapsed, prog);
         
     }

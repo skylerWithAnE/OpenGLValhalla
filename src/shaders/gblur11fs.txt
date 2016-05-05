@@ -38,9 +38,9 @@ uniform vec2 deltas;        //[1 or 0, 1 or 0]
 uniform vec4 tex_size;
 uniform sampler2D tex;
 
-
+out vec4 color;
 
 void main(){
     vec4 c = gaussblur11(tex,tex_size.zw,v_texcoord.st,deltas.st);
-    gl_FragColor=c;
+    color = c;
 }

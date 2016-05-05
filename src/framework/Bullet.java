@@ -24,11 +24,11 @@ public class Bullet {
     public Bullet(mat4 initialTransform, vec3 initialVelocity)
     {
         lifetime = 0.45f;
-        speed = 4f;
+        speed = 0.25f;
         this.velocity = initialVelocity;
         this.transform = new mat4();
         this.transform = initialTransform;
-        this.bulletShape = new Mesh("assets/bullet.obj.mesh");
+        this.bulletShape = new Mesh("assets/bullet_e.obj.mesh");
         bulletShape.emit_texture = new ImageTexture("assets/emissivemap.png");
         vec3 position = getPosition();
         this.boundingBox = new AABB(0.01f,0.01f,position.x, position.y);
@@ -53,7 +53,9 @@ public class Bullet {
         this.bulletShape.draw(prog);
         //remove stored uniform so that only the bullet is glowing green--not everything.
         prog.setUniform("emissionscale", 0f);
-        vec3 position = getPosition();
-        boundingBox.update(position.x, position.y);
+        if(dT > 0) {
+            vec3 position = getPosition();
+            boundingBox.update(position.x, position.y);
+        }
     }
 }
