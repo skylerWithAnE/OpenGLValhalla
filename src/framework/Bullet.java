@@ -22,7 +22,7 @@ public class Bullet {
     
     public Bullet(mat4 initialTransform, vec3 initialVelocity)
     {
-        lifetime = 1.0f;
+        lifetime = 0.45f;
         speed = 0.8f;
         this.velocity = initialVelocity;
         this.transform = new mat4();
@@ -34,9 +34,9 @@ public class Bullet {
     public void update(float dT, Program prog)
     {
         lifetime-=dT;
-        if(lifetime <= 0) {
-//            this.bulletShape.
-        }
+//        if(lifetime <= 0) {
+//        
+//        }
         mat4 trans = this.transform.mul(math3d.translation(this.velocity.mul((speed*dT))));
         this.transform = trans;
         prog.setUniform("transform", this.transform);

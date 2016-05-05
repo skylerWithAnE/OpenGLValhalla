@@ -14,6 +14,7 @@ import framework.math3d.math3d;
 public class Player {
     private Mesh playerShape;
     private mat4 transform;
+    public AABB boundingBox;
     public vec3 velocity;
     public vec3 position;
     public vec3 bulletOffset;
@@ -48,6 +49,7 @@ public class Player {
         if(dT > 0) {
             this.transform = this.transform.mul(math3d.translation(this.velocity.mul(dT)));
             this.position = this.position.add(this.velocity);
+            this.boundingBox.update(this.position.x, this.position.y);
         }
         Draw(prog);
         if(dT > 0)

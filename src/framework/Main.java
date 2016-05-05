@@ -30,12 +30,17 @@ public class Main{
     static LinkedList<Bullet> activeBullets = new LinkedList<Bullet>();
     static Mesh[] room;
     static Mesh sun;
-    static mat4[] roomTransforms = new mat4[floorsize];
+    static mat4[] roomTransforms;
+    static vec2[] gridPositions;
     static mat4 trans = translation(new vec3(.0f,0.0f,.0f));
     static Player pc;
     static Program pcprog;
+    static ImageTexture floorhighlight;
+    static ImageTexture floorunhighlight;
     
     public static void main(String[] args){
+        roomTransforms = new mat4[floorsize];
+        gridPositions = new vec2[floorsize];
         
         SDL_Init(SDL_INIT_VIDEO);
         long win = SDL_CreateWindow("ETGG 2802",40,60, 512,512, SDL_WINDOW_OPENGL );
@@ -96,10 +101,8 @@ public class Main{
         avgillumfbo = new Framebuffer(1,1);
         depthMapfbo = new Framebuffer(512,512);
         
-        //Basic Programs
-//        prog = new Program("src/shaders/vs.txt","src/shaders/gs.txt","src/shaders/fs.txt");
+        //Basic Program--used heavily cause I'm baaad.
         prog = new Program("src/shaders/vs.txt","src/shaders/fs.txt");
-        pcprog = new Program("src/shaders/pcvs.txt","src/shaders/fs.txt");
         
         //Radial Blur Programs
         progBlur = new Program("src/shaders/vsBlur.txt","src/shaders/fsBlur.txt");
@@ -137,6 +140,10 @@ public class Main{
         float shootDelay = 0.0f;
         
         pc = new Player(new vec3(0f,0f,0f));
+        
+        floorhighlight = new ImageTexture("assets/highlightfloor.png");
+        floorunhighlight = new ImageTexture("assets/highlightflooroff.png");
+       
         float[] matTmp = new float[16];
         for(int l = 0; l < 16; l++)
             matTmp[l] = 1.f;
@@ -149,11 +156,17 @@ public class Main{
             row = i % 8==0 ? row+1 : row;
             col = i % 8==0 ? 0     : col+1;
             room[i] = new Mesh("assets/ground.obj.mesh");
-            roomTransforms[i] = translation(new vec3((row-1)*25.0f, col*25.0f, 0.f));
+            room[i].texture = floorunhighlight;
+            float x = (row-1)*0.3f;
+            float y = col*0.3f;
+            roomTransforms[i] = translation(new vec3(x,y,0f));
+            gridPositions[i] = new vec2(x,y);
+            //System.out.println((row-1)*0.1f+", "+col*0.1f);
         }
         
         cam.walk(-3f);
         sun = new Mesh("assets/bullet.obj.mesh");
+        boolean posdebug = true;
         while(true){
             while(true){
                 int rv = SDL_PollEvent(ev);
@@ -186,28 +199,43 @@ public class Main{
 
             if( keys.contains(SDLK_w ))
             {
-                cam.strafe(new vec3(0.f,1.5f*elapsed,0.f));
+                cam.strafe(new vec3(0.f,3f*elapsed,0.f));
                 pc.velocity = new vec3(pc.velocity.x,0.5f,0.f);
             }
             if( keys.contains(SDLK_s))
             {
-                cam.strafe(new vec3(0.f,-1.5f*elapsed,0.f));
+                cam.strafe(new vec3(0.f,-3f*elapsed,0.f));
                 pc.velocity = new vec3(pc.velocity.x,-0.5f,0.f);
             }
             if( keys.contains(SDLK_a))
             {
-                cam.strafe(new vec3(-1.5f*elapsed,0.f,0.f));
+                cam.strafe(new vec3(-3f*elapsed,0.f,0.f));
                 pc.velocity = new vec3(-0.5f,pc.velocity.y,0.f);
             }
             if( keys.contains(SDLK_d))
             {
-                cam.strafe(new vec3(1.5f*elapsed,0.f,0.f));
+                cam.strafe(new vec3(3f*elapsed,0.f,0.f));
                 pc.velocity = new vec3(0.5f,pc.velocity.y,0.f);
             }
             if( keys.contains(SDLK_i))
                 cam.walk(1.5f*elapsed);
             if( keys.contains(SDLK_k))
                 cam.walk(-1.5f*elapsed);
+            if(keys.contains(SDLK_t)) {
+                if(posdebug) {
+                    posdebug = false;
+                    System.out.println("player position "+pc.position);
+                    int x = (int)Math.floor(pc.position.x);
+                    int y = (int)Math.floor(pc.position.y);
+                    for (int i = 0; i < floorsize; i++) {
+                        if(x == gridPositions[i].x && y == gridPositions[i].y) {
+                            System.out.println("player in square "+i+"!");
+                        }
+                    }
+                }
+            }
+            else
+                posdebug = true;
             
             if(canShoot)
             {
@@ -489,16 +517,17 @@ public class Main{
         cam.draw(prog);
         sun.draw(prog);
         
+        prog.setUniform("emissionscale", 1.f);
         for(int j = 0; j < floorsize; j++)
         {
             prog.setUniform("transform", roomTransforms[j]);
             room[j].draw(prog);
-            
         }
         for(int i = 0; i < activeBullets.size(); i++)
         {
             activeBullets.get(i).update(0, prog);
         }
+        prog.setUniform("emissionscale", 0.f);
         pc.Update(0, prog);
         
     }
